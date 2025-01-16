@@ -6,23 +6,35 @@ import AddWatchlistButton from "@/components/AddWatchlistButton";
 import CommentSection from "@/components/CommentSection";
 import MovieCarousel from "@/components/MovieCarousel";
 import useStore from "@/store/store";
-import { MovieDetails } from "@/types/types";
+import { MovieDetails, Trailer, TrailerResponse } from "@/types/types";
 import { fetcher } from "@/utils/fetcher";
 import useSWR from "swr";
+import YoutubeTrailer from "./YoutubeTrailer";
 
-
-const ClientMovieDetails = ({ id, mediaType }: {id: number, mediaType: 'movie' | 'tv'}) => {
+const ClientMovieDetails = ({
+  id,
+  mediaType,
+}: {
+  id: number;
+  mediaType: "movie" | "tv";
+}) => {
   const [imageError, setImageError] = useState(false);
-  
+
   const user = useStore((state) => state.user);
-  const { data: movieDetails} = useSWR<MovieDetails>(
+  const { data: movieDetails } = useSWR<MovieDetails>(
     id ? `/api/details?type=${mediaType}&id=${id}` : null,
     fetcher
   );
-  const { data: similarMovies} = useSWR(
+  const { data: similarMovies } = useSWR(
     movieDetails ? `/api/similar?type=${mediaType}&id=${id}` : null,
     fetcher
   );
+
+  const { data: trailers } = useSWR<TrailerResponse>(
+    id ? `/api/trailers?type=${mediaType}&id=${id}` : null,
+    fetcher
+  );
+  const ytLinkArr: string[] = [];
 
   if (!movieDetails || !similarMovies) {
     return (
@@ -30,6 +42,20 @@ const ClientMovieDetails = ({ id, mediaType }: {id: number, mediaType: 'movie' |
         <LoadingSpinner className="w-8 h-8" />
       </div>
     );
+  }
+
+  function trailerJsonToYoutubeLink(trailer: Trailer): string {
+    if (trailer.site === "YouTube") {
+      return `https://www.youtube.com/watch?v=${trailer.key}`;
+    } else {
+      return "Not a YouTube trailer";
+    }
+  }
+
+  if (trailers) {
+    trailers.results.forEach((trailer) => {
+      ytLinkArr.push(trailerJsonToYoutubeLink(trailer));
+    });
   }
 
   // Handle image load error
@@ -42,19 +68,24 @@ const ClientMovieDetails = ({ id, mediaType }: {id: number, mediaType: 'movie' |
           {movieDetails.title || movieDetails.name}
         </h1>
       </div>
+      {ytLinkArr.length != 0 ? <YoutubeTrailer trailers={ytLinkArr} /> : <></>}
       <div className="flex flex-col md:flex-row gap-8 mt-8">
-        <Image
-          src={
-            imageError
-              ? "/images/movie-poster-placeholder.png"
-              : `https://image.tmdb.org/t/p/w500${movieDetails.poster_path}`
-          }
-          alt={movieDetails.title || movieDetails.name || 'No title'}
-          width={500}
-          height={750}
-          className="w-full md:w-1/4 h-auto object-cover rounded-md shadow-lg"
-          onError={handleImageError}
-        />
+        {ytLinkArr.length == 0 ? (
+          <Image
+            src={
+              imageError
+                ? "/images/movie-poster-placeholder.png"
+                : `https://image.tmdb.org/t/p/w500${movieDetails.poster_path}`
+            }
+            alt={movieDetails.title || movieDetails.name || "No title"}
+            width={500}
+            height={750}
+            className="w-full md:w-1/4 h-auto object-cover rounded-md shadow-lg"
+            onError={handleImageError}
+          />
+        ) : (
+          <></>
+        )}
         <div className="text-white md:w-2/3">
           <p className="mb-4">{movieDetails.overview}</p>
           <p className="text-lg mb-2">
@@ -69,7 +100,7 @@ const ClientMovieDetails = ({ id, mediaType }: {id: number, mediaType: 'movie' |
           </p>
           {user ? (
             <div className="mt-4 flex gap-2">
-              <AddFavsButton id={movieDetails.id} mediaType={mediaType}/>
+              <AddFavsButton id={movieDetails.id} mediaType={mediaType} />
               <AddWatchlistButton id={movieDetails.id} mediaType={mediaType} />
             </div>
           ) : null}
