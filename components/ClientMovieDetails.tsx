@@ -9,6 +9,7 @@ import useStore from "@/store/store";
 import { MovieDetails, Trailer, TrailerResponse } from "@/types/types";
 import { fetcher } from "@/utils/fetcher";
 import useSWR from "swr";
+import YoutubeTrailer from "./YoutubeTrailer";
 
 const ClientMovieDetails = ({
   id,
@@ -33,6 +34,7 @@ const ClientMovieDetails = ({
     id ? `/api/trailers?type=${mediaType}&id=${id}` : null,
     fetcher
   );
+  const ytLinkArr: string[] = [];
 
   if (!movieDetails || !similarMovies) {
     return (
@@ -51,12 +53,9 @@ const ClientMovieDetails = ({
   }
 
   if (trailers) {
-    const ytLinkArr:string[] = [];
     trailers.results.forEach((trailer) => {
       ytLinkArr.push(trailerJsonToYoutubeLink(trailer));
     });
-
-    console.log(ytLinkArr)
   }
 
   // Handle image load error
@@ -69,19 +68,24 @@ const ClientMovieDetails = ({
           {movieDetails.title || movieDetails.name}
         </h1>
       </div>
+      {ytLinkArr.length != 0 ? <YoutubeTrailer trailers={ytLinkArr} /> : <></>}
       <div className="flex flex-col md:flex-row gap-8 mt-8">
-        <Image
-          src={
-            imageError
-              ? "/images/movie-poster-placeholder.png"
-              : `https://image.tmdb.org/t/p/w500${movieDetails.poster_path}`
-          }
-          alt={movieDetails.title || movieDetails.name || "No title"}
-          width={500}
-          height={750}
-          className="w-full md:w-1/4 h-auto object-cover rounded-md shadow-lg"
-          onError={handleImageError}
-        />
+        {ytLinkArr.length == 0 ? (
+          <Image
+            src={
+              imageError
+                ? "/images/movie-poster-placeholder.png"
+                : `https://image.tmdb.org/t/p/w500${movieDetails.poster_path}`
+            }
+            alt={movieDetails.title || movieDetails.name || "No title"}
+            width={500}
+            height={750}
+            className="w-full md:w-1/4 h-auto object-cover rounded-md shadow-lg"
+            onError={handleImageError}
+          />
+        ) : (
+          <></>
+        )}
         <div className="text-white md:w-2/3">
           <p className="mb-4">{movieDetails.overview}</p>
           <p className="text-lg mb-2">
