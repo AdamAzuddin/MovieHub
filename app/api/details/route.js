@@ -1,4 +1,3 @@
-// app/api/similar/route.js
 import { NextResponse } from 'next/server';
 import { TMDB_BASE_URL } from '@/constants/constants';
 

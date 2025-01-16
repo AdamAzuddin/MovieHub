@@ -214,3 +214,20 @@ export interface CommentSectionProps {
   mediaId: number;
   mediaType: "movie" | "tv";
 }
+
+export type Trailer = {
+  iso_639_1: string;       // "en"
+  iso_3166_1: string;      // "US"
+  name: string;            // "\"Double Your Villains\" Featurette"
+  key: string;             // "595kqDGsKXk"
+  site: string;            // "YouTube"
+  size: number;            // 1080
+  type: string;            // "Behind the Scenes"
+  official: boolean;       // true
+  published_at: string;    // "2024-12-08T00:00:04.000Z"
+  id: string;              // "6754f512f1829b66fbb4db5e"
+};
+
+export type TrailerResponse = {
+  results: Trailer[]
+}
