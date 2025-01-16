@@ -1,7 +1,7 @@
-import React, { useRef, useCallback, useEffect } from 'react';
-import YouTube from 'react-youtube';
-import { useTrailerPlayback } from '@/hooks/useTrailerPlayback';
-import { Volume2, VolumeX, SkipForward, Pause, Play } from 'lucide-react';
+import React, { useRef, useCallback, useEffect } from "react";
+import YouTube from "react-youtube";
+import { useTrailerPlayback } from "@/hooks/useTrailerPlayback";
+import { Volume2, VolumeX, SkipForward, Pause, Play } from "lucide-react";
 
 interface TrailerProps {
   trailers: string[];
@@ -18,42 +18,43 @@ export default function YoutubeTrailer({ trailers }: TrailerProps) {
     togglePlayPause,
   } = useTrailerPlayback(trailers);
 
-  const onReady = useCallback((event: { target: any }) => {
-    const player = event.target;
-    if (isPlaying) {
-      player.playVideo();
-    }
-    if (isMuted) {
-      player.mute(); // Ensure video starts muted if `isMuted` is true
-    } else {
-      player.unMute(); // Unmute video if `isMuted` is false
-    }
-  }, [isPlaying, isMuted]);
+  const onReady = useCallback(
+    (event: { target: any }) => {
+      const player = event.target;
+      if (isPlaying) {
+        player.playVideo();
+      }
+      if (isMuted) {
+        player.mute(); // Ensure video starts muted if `isMuted` is true
+      } else {
+        player.unMute(); // Unmute video if `isMuted` is false
+      }
+    },
+    [isPlaying, isMuted]
+  );
 
   const onEnd = useCallback(() => {
     playNextTrailer();
   }, [playNextTrailer]);
 
   const onError = useCallback(() => {
-    console.error('Error playing video');
+    console.error("Error playing video");
     playNextTrailer();
   }, [playNextTrailer]);
 
   const extractVideoId = (url: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const regExp =
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+    return match && match[2].length === 11 ? match[2] : null;
   };
 
   const videoId = extractVideoId(currentTrailer);
 
-  if (!videoId) {
-    return <div>Invalid YouTube URL</div>;
-  }
-
   useEffect(() => {
     if (playerRef.current && playerRef.current.internalPlayer) {
       const player = playerRef.current.internalPlayer;
+      // Set mute/unmute based on the initial state
       if (isMuted) {
         player.mute();
       } else {
@@ -62,13 +63,29 @@ export default function YoutubeTrailer({ trailers }: TrailerProps) {
     }
   }, [isMuted]);
 
+  // Handle play/pause state
+  useEffect(() => {
+    if (playerRef.current && playerRef.current.internalPlayer) {
+      const player = playerRef.current.internalPlayer;
+      if (isPlaying) {
+        player.playVideo();
+      } else {
+        player.pauseVideo();
+      }
+    }
+  }, [isPlaying]);
+
+  if (!videoId) {
+    return <div>Invalid YouTube URL</div>;
+  }
+
   return (
     <div className="relative w-full aspect-video">
       <YouTube
         videoId={videoId}
         opts={{
-          height: '100%',
-          width: '100%',
+          height: "100%",
+          width: "100%",
           playerVars: {
             autoplay: 1,
             controls: 0,
@@ -89,14 +106,14 @@ export default function YoutubeTrailer({ trailers }: TrailerProps) {
             <button
               onClick={togglePlayPause}
               className="text-white hover:text-gray-300 transition-colors"
-              aria-label={isPlaying ? 'Pause' : 'Play'}
+              aria-label={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? <Pause size={24} /> : <Play size={24} />}
             </button>
             <button
               onClick={toggleMute}
               className="text-white hover:text-gray-300 transition-colors"
-              aria-label={isMuted ? 'Unmute' : 'Mute'}
+              aria-label={isMuted ? "Unmute" : "Mute"}
             >
               {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
             </button>
